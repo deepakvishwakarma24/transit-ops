@@ -1,8 +1,20 @@
 import { createNeonAuth } from "@neondatabase/auth/next/server";
 
+function requiredEnvironmentVariable(name: string): string {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`${name} must be configured before Neon Auth can start.`);
+  }
+
+  return value;
+}
+
 export const auth = createNeonAuth({
-  baseUrl: process.env.NEON_AUTH_BASE_URL!,
+  baseUrl: requiredEnvironmentVariable("NEON_AUTH_BASE_URL"),
   cookies: {
-    secret: process.env.NEON_AUTH_COOKIE_SECRET!,
+    secret: requiredEnvironmentVariable("NEON_AUTH_COOKIE_SECRET"),
+    sameSite: "strict",
+    sessionDataTtl: 300,
   },
 });

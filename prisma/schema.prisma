@@ -58,32 +58,29 @@ enum VehicleType {
   OTHER
 }
 
+enum ApplicationRole {
+  UNASSIGNED
+  FLEET_MANAGER
+  DISPATCHER
+  SAFETY_OFFICER
+  FINANCIAL_ANALYST
+}
+
 // -----------------------------------------------------------------------------
 // MODELS
 // -----------------------------------------------------------------------------
 
-model Role {
-  id          String   @id @default(cuid())
-  name        String   @unique 
-  description String?
-  
-  users       User[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
+model UserProfile {
+  id         String          @id @default(cuid())
+  authUserId String          @unique
+  email      String          @unique
+  name       String?
+  role       ApplicationRole @default(UNASSIGNED)
 
-model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  
-  roleId       String
-  role         Role     @relation(fields: [roleId], references: [id])
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
 }
 
 model Settings {

@@ -5,5 +5,7 @@ export const proxy = auth.middleware({
 });
 
 export const config = {
-  matcher: ["/account/:path*"],
+  matcher: [
+    "/((?!api/auth|auth|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\..*).*)",
+  ],
 };
