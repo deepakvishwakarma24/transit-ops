@@ -1,0 +1,15 @@
+{
+  "id": "019f5612-c85d-76a4-b48f-0190412fb4cf",
+  "name": "Prisma seed mock data",
+  "description": "Create a complete seed script with realistic mock data for all Prisma models",
+  "status": "draft",
+  "worktree": {
+    "path": "/mnt/c/Users/Sahil/Documents/transit-ops/transit-ops"
+  },
+  "scoping": {},
+  "phases": [],
+  "decisions": [],
+  "memories": [],
+  "createdAt": "2026-07-12T11:24:59.357Z",
+  "updatedAt": "2026-07-12T11:24:59.357Z"
+}

@@ -1,7 +1,9 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { isPrismaError, PrismaErrorCode } from "@/lib/prisma-errors";
 import { prisma } from "@/lib/prisma";
 import { updateDriverSchema } from "@/lib/validators/driver.schema";
+import { requireAuthenticatedProfile, requireRole } from "@/lib/auth/access";
+import { ApplicationRole } from "@prisma/client";
 
 // Opt out of static generation — requires a live DB connection.
 export const dynamic = "force-dynamic";
@@ -17,6 +19,11 @@ export async function GET(
   _request: NextRequest,
   { params }: RouteContext,
 ) {
+  const context = await requireAuthenticatedProfile();
+  if (context instanceof NextResponse) {
+    return context;
+  }
+
   const { id } = await params;
 
   try {
@@ -40,6 +47,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: RouteContext,
 ) {
+  const context = await requireRole(ApplicationRole.FLEET_MANAGER, ApplicationRole.SAFETY_OFFICER);
+  if (context instanceof NextResponse) {
+    return context;
+  }
+
   const { id } = await params;
   let body: unknown;
 
@@ -87,6 +99,11 @@ export async function DELETE(
   _request: NextRequest,
   { params }: RouteContext,
 ) {
+  const context = await requireRole(ApplicationRole.FLEET_MANAGER, ApplicationRole.SAFETY_OFFICER);
+  if (context instanceof NextResponse) {
+    return context;
+  }
+
   const { id } = await params;
 
   try {

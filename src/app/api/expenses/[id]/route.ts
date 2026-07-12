@@ -1,7 +1,9 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { isPrismaError, PrismaErrorCode } from "@/lib/prisma-errors";
 import { prisma } from "@/lib/prisma";
 import { updateExpenseSchema } from "@/lib/validators/expense.schema";
+import { requireAuthenticatedProfile, requireRole } from "@/lib/auth/access";
+import { ApplicationRole } from "@prisma/client";
 
 // Opt out of static generation — requires a live DB connection.
 export const dynamic = "force-dynamic";
@@ -17,6 +19,11 @@ export async function GET(
   _request: NextRequest,
   { params }: RouteContext,
 ) {
+  const context = await requireAuthenticatedProfile();
+  if (context instanceof NextResponse) {
+    return context;
+  }
+
   const { id } = await params;
 
   try {
@@ -45,6 +52,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: RouteContext,
 ) {
+  const context = await requireRole(ApplicationRole.FLEET_MANAGER, ApplicationRole.FINANCIAL_ANALYST);
+  if (context instanceof NextResponse) {
+    return context;
+  }
+
   const { id } = await params;
   let body: unknown;
 
@@ -79,8 +91,6 @@ export async function PATCH(
         err.code === PrismaErrorCode.RECORD_NOT_FOUND ||
         err.code === PrismaErrorCode.FOREIGN_KEY_CONSTRAINT
       ) {
-        // This code can mean either the expense doesn't exist, OR one of the relations (vehicle/trip/maintenance) doesn't exist.
-        // We'll return a generic 404 message for simplicity.
         return Response.json({ error: "Record not found" }, { status: 404 });
       }
     }
@@ -96,6 +106,11 @@ export async function DELETE(
   _request: NextRequest,
   { params }: RouteContext,
 ) {
+  const context = await requireRole(ApplicationRole.FLEET_MANAGER, ApplicationRole.FINANCIAL_ANALYST);
+  if (context instanceof NextResponse) {
+    return context;
+  }
+
   const { id } = await params;
 
   try {

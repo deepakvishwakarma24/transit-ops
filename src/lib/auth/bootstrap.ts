@@ -35,10 +35,30 @@ async function upsertUserProfile(
 ): Promise<UserProfile> {
   const email = normalizeEmail(user.email);
 
-  return transaction.userProfile.upsert({
+  const profileByAuthUserId = await transaction.userProfile.findUnique({
     where: { authUserId: user.id },
-    update: { email, name: user.name },
-    create: {
+  });
+
+  if (profileByAuthUserId) {
+    return transaction.userProfile.update({
+      where: { id: profileByAuthUserId.id },
+      data: { email, name: user.name },
+    });
+  }
+
+  const profileByEmail = await transaction.userProfile.findUnique({
+    where: { email },
+  });
+
+  if (profileByEmail) {
+    return transaction.userProfile.update({
+      where: { id: profileByEmail.id },
+      data: { authUserId: user.id, email, name: user.name },
+    });
+  }
+
+  return transaction.userProfile.create({
+    data: {
       authUserId: user.id,
       email,
       name: user.name,
@@ -50,9 +70,38 @@ async function upsertUserProfile(
 export async function syncUserProfile(
   user: AuthenticatedUser,
 ): Promise<UserProfile> {
-  return prisma.$transaction((transaction) =>
-    upsertUserProfile(transaction, user),
-  );
+  const email = normalizeEmail(user.email);
+
+  const profileByAuthUserId = await prisma.userProfile.findUnique({
+    where: { authUserId: user.id },
+  });
+
+  if (profileByAuthUserId) {
+    return prisma.userProfile.update({
+      where: { id: profileByAuthUserId.id },
+      data: { email, name: user.name },
+    });
+  }
+
+  const profileByEmail = await prisma.userProfile.findUnique({
+    where: { email },
+  });
+
+  if (profileByEmail) {
+    return prisma.userProfile.update({
+      where: { id: profileByEmail.id },
+      data: { authUserId: user.id, email, name: user.name },
+    });
+  }
+
+  return prisma.userProfile.create({
+    data: {
+      authUserId: user.id,
+      email,
+      name: user.name,
+      role: ApplicationRole.UNASSIGNED,
+    },
+  });
 }
 
 export async function setupInitialFleetManager(

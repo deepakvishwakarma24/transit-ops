@@ -1,7 +1,9 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { isPrismaError, PrismaErrorCode } from "@/lib/prisma-errors";
 import { prisma } from "@/lib/prisma";
 import { createExpenseSchema } from "@/lib/validators/expense.schema";
+import { requireAuthenticatedProfile, requireRole } from "@/lib/auth/access";
+import { ApplicationRole } from "@prisma/client";
 
 // Opt out of static generation — this route requires a live DB connection.
 export const dynamic = "force-dynamic";
@@ -11,6 +13,11 @@ export const dynamic = "force-dynamic";
 // ---------------------------------------------------------------------------
 
 export async function GET() {
+  const context = await requireAuthenticatedProfile();
+  if (context instanceof NextResponse) {
+    return context;
+  }
+
   try {
     const expenses = await prisma.expense.findMany({
       orderBy: { recordedAt: "desc" },
@@ -34,6 +41,10 @@ export async function GET() {
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
+  const context = await requireRole(ApplicationRole.FLEET_MANAGER, ApplicationRole.FINANCIAL_ANALYST);
+  if (context instanceof NextResponse) {
+    return context;
+  }
   let body: unknown;
   try {
     body = await request.json();
